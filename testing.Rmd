@@ -1,0 +1,45 @@
+---
+title: "Untitled"
+output: html_document
+date: '2023-06-03'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+data = read.csv("tweets_num_crimes_per_month_with_keywords_no_text.csv", header=T)
+library(tidyverse)
+library(zoo)
+library(ggplot2)
+library(dplyr)
+library(reticulate)
+```
+
+
+```{r cars}
+summary(data)
+head(data)
+data$keyword = as.factor(data$keyword)
+data <- na.omit(data)
+
+data$sentiment =  as.factor(data$sentiment)
+data$isPositive <- as.numeric(case_when(data$sentiment == "Negative" ~ 0,
+                             data$sentiment == "Positive" ~ 1))
+data$Date = as.Date(data$Date)
+
+
+rolling_avg <- data %>% dplyr::mutate(sentiment3day = zoo::rollmean(isPositive, k=3, fill=0.5), sentiment7day = zoo::rollmean(isPositive, k=7, fill=0.5))
+
+head(rolling_avg)
+
+
+overall_avg <- glm(isPositive~keyword + Date + num_crimes_per_month + geo_tag.stateName, data=rolling_avg)
+summary(overall_avg)
+
+avg3day = lm(sentiment3day~keyword + Date + num_crimes_per_month + geo_tag.stateName, data=rolling_avg)
+summary(avg3day)
+
+avg7day = lm(sentiment7day~keyword + Date + num_crimes_per_month + geo_tag.stateName, data=rolling_avg)
+summary(avg7day)
+```
+

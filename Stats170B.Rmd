@@ -1,0 +1,79 @@
+---
+title: "Sentiment vs Crimes"
+author: "Ranjith Kumar"
+date: '2023-06-10'
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library("dplyr")
+library(ggplot2)
+library(car)
+```
+
+First, download the datasets
+```{r}
+tweets.crimesperday <- read.csv("tweets_num_crimes.csv")
+tweets.crimespermonth <- read.csv("tweets_num_crimes_per_month.csv")
+tweets.crimespermonth2 <-  read.csv("tweets_num_crimes_per_month_with_keywords.csv")
+tweets.crimesperday<-drop_na(tweets.crimesperday)
+tweets.crimespermonth<-drop_na(tweets.crimespermonth)
+tweets.crimespermonth2<-drop_na(tweets.crimespermonth2)
+```
+
+Positive vs negative tweets per year
+```{r}
+tweets.crimesperday %>% 
+  ggplot(aes(x = Year, fill = as.factor(sentiment)), color = sentiment) +
+  geom_bar(position = "dodge") +
+  labs(title = "Positive vs Negative tweets per year", fill = "Sentiment") +
+  theme_bw()
+```
+
+Change the sentiment into 0 & 1 values for logistic regression.
+```{r}
+tweets.crimesperday$sentiment[tweets.crimesperday$sentiment == 'Positive'] <- 1
+tweets.crimesperday$sentiment[tweets.crimesperday$sentiment == 'Negative'] <- 0
+tweets.crimesperday$sentiment <- as.integer(tweets.crimesperday$sentiment)
+tweets.crimesperday$Date <- as.Date(tweets.crimesperday$Date)
+
+tweets.crimespermonth$sentiment[tweets.crimespermonth$sentiment == 'Positive'] <- 1
+tweets.crimespermonth$sentiment[tweets.crimespermonth$sentiment == 'Negative'] <- 0
+tweets.crimespermonth$sentiment <- as.integer(tweets.crimespermonth$sentiment)
+tweets.crimespermonth$Date <- as.Date(tweets.crimespermonth$Date)
+
+
+tweets.crimespermonth2$sentiment[tweets.crimespermonth2$sentiment == 'Positive'] <- 1
+tweets.crimespermonth2$sentiment[tweets.crimespermonth2$sentiment == 'Negative'] <- 0
+tweets.crimespermonth2$sentiment <- as.integer(tweets.crimespermonth2$sentiment)
+tweets.crimespermonth2$Date <- as.Date(tweets.crimespermonth2$Date)
+
+tweets.onlylgbt <- filter(tweets.crimespermonth2, keyword == "['lgbt']")
+head(tweets.onlylgbt)
+```
+
+Create and analyze models
+```{r}
+tweets.v.crimes.daily <- glm(sentiment ~ user.followers_count + num_crimes, 
+                      data = tweets.crimesperday, family = "binomial")
+
+tweets.v.crimes.monthly <- glm(sentiment ~ user.followers_count + num_crimes_per_month, 
+                               data = tweets.crimespermonth, family = "binomial")
+
+tweets.v.crimes.monthly2 <- glm(sentiment ~ user.followers_count + num_crimes_per_month, 
+                                   data = tweets.onlylgbt, family = "binomial")
+
+summary(tweets.v.crimes.daily)
+summary(tweets.v.crimes.monthly)
+summary(tweets.v.crimes.monthly2)
+
+```
+
+
+
+
+
