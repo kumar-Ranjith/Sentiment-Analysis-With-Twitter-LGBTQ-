@@ -1,8 +1,11 @@
 # STATS-170B
 
+## Twitter Sentiment vs Hate Crimes.pdf
 
+Contains Completee Analysis of the project
 
 ## Main.py
+
 Downloads Files and samples them for our models
 
 ## Sentiment_vector.py
